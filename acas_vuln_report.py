@@ -49,9 +49,9 @@ totalRecords = int(getRecs['totalRecords'])
 filters = [ # Uncomment/comment any set of filters you want to include/exclude:
 
 # The  value 0:7 below will show results from the last 7 days. 0:30 would show vulns seen within the last 30 days.
- #           {'filterName': 'lastSeen',
- #            'operator': '=',
- #            'value': '0:30'},
+#            {'filterName': 'lastSeen',
+#             'operator': '=',
+#             'value': '0:30'},
 
 # Severity value 4,3,2 limits the results to Critical, Medium and High. 1 would show Low and 0 shows Info.
              {'filterName': 'severity',

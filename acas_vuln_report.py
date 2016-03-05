@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-# Mike Diaz, acas_vuln_report.py v0.6
-# Change log:
-# 0.6 - Checks to see if there are any authentication failures and displays them in a separate table above the normal results. Removed indented rows for additional group sets and gave the leading rows a rowspan equivalent to the extra sets.
-# To Do:
-#   - For results with more than three sets, include a feature that collapses by default with an option to expand. The button/link to expand should be highly visible.
-# Known Issues: Results may not capture the very last vuln, need to investigate.
-
 import urllib2
 import urllib
 import json
@@ -98,14 +91,15 @@ for vuln in vulns['results']:
         plugin[pid]['groups'] = {}
 
     plugin[pid]['name'] = vuln['pluginName']
-    shortName = re.sub(r'\.private\.jms', '', vuln['dnsName'])
+    # For shorter lists of hostnames, you can use the sub below to chop off repeated text like domain names
+    shortName = re.sub(r'\.example\.com', '', vuln['dnsName'])
     sol = re.sub(r'\\n', '<br>', vuln['solution'])
     plugin[pid]['solution'] = sol
     plugin[pid]['severity'] = severity
     syn = re.sub(r'\\n', '<br>', vuln['synopsis'])
     plugin[pid]['synopsis'] = syn
     iavmR = re.search(r'<iav.>(.*)</iav.>', vuln['pluginText'])
-    stigR = re.search(r'stig_severity>(I*)<', vuln['pluginText']) #if stigSeverity in vulns[pid] assign to variable otherwise variable gets NA
+    stigR = re.search(r'stig_severity>(I*)<', vuln['pluginText'])
     outputR = re.search(r'plugin_output>(.*)</plugin_output', vuln['pluginText'])
 
     if iavmR is None:
@@ -135,6 +129,9 @@ plugin = OrderedDict(sorted(plugin.iteritems(), key=lambda x: x[1]['severity'], 
 
 print '<html><style>body{font-family:arial;}tbody td:nth-of-type(odd){background:rgba(175,215,255,0.5);}tbody td:nth-of-type(even),tr:nth-of-type(even){background:rgba(200,230,255,0.5)}table{border-collapse:collapse;border-spacing:0;}td{padding:5px;border:1px solid black;}td:empty{border:none;}</style>'
 
+# This block will check plugin 21745 for authentication erros so it can display them at the top of the list.
+# However, you must recast the risk for this plugin to High or Critical, otherwise it won't be returned
+# unless you are including Info results
 if "21745" in plugin:
     print '<center><b style="color:#991100">Authentication Failure - Local Checks Not Run:</b><table><tr><td><b>Total</b></td><td><b>Hosts Affected</b></td><td><b>Details</b></td></tr>'
     for group in plugin['21745']['groups']:
@@ -160,7 +157,7 @@ for id in plugin:
         numHosts = str(numHosts)
         strOutput = re.sub(r'(^(<br/>)+)|((<br/>)+)$', '', plugin[id]['groups'][group]['details'])
 
-        if count is None: # This morphed from different requirements. Need to re-write it.
+        if count is None:
             if int(groupLen) > 1:
                 row = '<tr><td rowspan="'+ groupLen +'" valign=top>' + id + '</td><td rowspan="'+ groupLen +'" valign=top>' + plugin[id]['name'] + '</td><td rowspan="'+ groupLen +'" valign=top>' + plugin[id]['iavm'] + '<br>CAT: ' + plugin[id]['stig'] + '</td><td rowspan="'+ groupLen +'" valign=top><b><font color=' + severityColor[plugin[id]['severity']] + '>' + severityText[plugin[id]['severity']] + '</font></b></td><td valign=top>' + strOutput + '</td><td valign=top>' + numHosts + '</td><td valign=top>' + plugin[id]['groups'][group]['affectedHosts'] + '</td></tr>'
                 count = "multi"
